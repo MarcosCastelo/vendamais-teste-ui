@@ -1,26 +1,39 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Login from './components/Login';
+import Register from './components/Register';
+import { PrivateRoute } from './components/PrivateRoute';
+import Dashboard from './components/Dashboard';
+import { useAppDispatch } from './hooks';
+import { logoutUser, reauthenticate } from './store/authSlice'
+import { tokenIsValid } from './utils/jwtExpiration';
+import { AppShell } from './components/AppShell';
+import Transactions from './components/Transactions';
 
-function App() {
+const App: React.FC = () => {
+  const dispatch = useAppDispatch()
+  useEffect(() => {
+    if (tokenIsValid()) {
+      dispatch(reauthenticate())
+    } else {
+      dispatch(logoutUser())
+    }
+  }, [dispatch])
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Routes>
+        <Route element={<AppShell />}>
+          <Route path="/login" Component={Login} />
+          <Route path="/register" Component={Register} />
+          <Route element={<PrivateRoute/>}>
+            <Route path="/" Component={Dashboard} />
+            <Route path='/transactions' Component={Transactions}></Route>
+            <Route path='/dashboard' Component={Dashboard}></Route>
+          </Route>
+        </Route>
+      </Routes>
+    </Router>
   );
-}
+};
 
 export default App;
